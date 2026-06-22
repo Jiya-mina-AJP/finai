@@ -1,11 +1,44 @@
-# Full Stack AI Fianace Platform with Next JS, Supabase, Tailwind, Prisma, Inngest, ArcJet, Shadcn UI Tutorial 🔥🔥
-## https://youtu.be/egS6fnZAdzk
+# FinAI - Personal Finance Platform
 
-<img width="1470" alt="Screenshot 2024-12-10 at 9 45 45 AM" src="https://github.com/user-attachments/assets/1bc50b85-b421-4122-8ba4-ae68b2b61432">
+FinAI is a modern, full-stack personal finance platform that helps you track your expenses, manage budgets, analyze transactions, and scan receipts—all in one clean dashboard.
 
-### Make sure to create a `.env` file with following variables -
+## Key Features
 
+- **Multi-Account & Multi-Currency**: Manage multiple bank or credit accounts in various currencies with real-time tracking.
+- **Transaction Management**: Detailed transaction tables with searching, category filtering, pagination, and bulk actions.
+- **Smart Receipt Scanner**: Automatically extract transaction details from uploaded receipt images.
+- **Budget Planning**: Set monthly budgets and monitor your spending progress with interactive visual indicators.
+- **Advanced Analytics**: Visual representations of income, expenses, and category distributions over custom date ranges.
+- **Automated Insights**: Keep track of recurring transactions and monthly updates automatically.
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database**: PostgreSQL (Supabase) with Prisma ORM
+- **Authentication**: Clerk
+- **Background Jobs**: Inngest
+- **Security & Rate Limiting**: ArcJet
+- **Styling**: Tailwind CSS & Shadcn UI
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/Jiya-mina-AJP/finai.git
+cd finai
 ```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Set up environment variables
+Create a `.env` file in the root directory and add the following variables:
+
+```env
 DATABASE_URL=
 DIRECT_URL=
 
@@ -17,8 +50,19 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
 
 GEMINI_API_KEY=
-
 RESEND_API_KEY=
-
 ARCJET_KEY=
 ```
+
+### 4. Database Setup
+Push the schema to your database:
+```bash
+npx prisma db push
+```
+
+### 5. Run the development server
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
