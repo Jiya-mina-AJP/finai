@@ -2,6 +2,9 @@ import arcjet, { detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+// Force Node.js runtime to prevent Vercel Edge Runtime crashes with Arcjet APIs
+export const runtime = "nodejs";
+
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/account(.*)",
