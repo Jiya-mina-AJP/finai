@@ -1,4 +1,4 @@
-import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
+import arcjet, { detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -8,40 +8,49 @@ const isProtectedRoute = createRouteMatcher([
   "/transaction(.*)",
 ]);
 
-// Create Arcjet middleware
+// 1. Create Arcjet instance
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
-  // characteristics: ["userId"], // Track based on Clerk userId
   rules: [
-    // Shield protection for content and security
     shield({
       mode: "LIVE",
     }),
     detectBot({
-      mode: "LIVE", // will block requests. Use "DRY_RUN" to log only
+      mode: "LIVE", 
       allow: [
-        "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc
-        "GO_HTTP", // For Inngest
-        // See the full list at https://arcjet.com/bot-list
+        "CATEGORY:SEARCH_ENGINE", 
+        "GO_HTTP", 
       ],
     }),
   ],
 });
 
-// Create base Clerk middleware
-const clerk = clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
-
-  if (!userId && isProtectedRoute(req)) {
-    const { redirectToSignIn } = await auth();
-    return redirectToSignIn();
+// 2. Export Clerk middleware directly and run Arcjet inside it
+export default clerkMiddleware(async (auth, req) => {
+  // Run Arcjet protection first
+  const decision = await aj.protect(req);
+  if (decision.isDenied()) {
+    if (decision.reason.isRateLimit()) {
+      return NextResponse.json({ code: 429, message: "Too Many Requests" }, { status: 429 });
+    } else {
+      return NextResponse.json({ code: 403, message: "Forbidden" }, { status: 403 });
+    }
   }
 
-  return NextResponse.next();
-});
+  // Check authentication for protected routes
+  if (isProtectedRoute(req)) {
+    const authObject = await auth();
+    
+    // If there is no user logged in, redirect them to sign-in securely
+    if (!authObject.userId) {
+      return authObject.redirectToSignIn();
+    }
+  }
 
-// Chain middlewares - ArcJet runs first, then Clerk
-export default createMiddleware(aj, { existingMiddleware: clerk });
+  // Note: We do NOT return NextResponse.next() here. 
+  // Allowing the callback to finish without returning a custom response 
+  // lets Clerk automatically inject the required authentication headers.
+});
 
 export const config = {
   matcher: [
