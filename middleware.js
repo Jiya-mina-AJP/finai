@@ -8,39 +8,40 @@ const isProtectedRoute = createRouteMatcher([
   "/transaction(.*)",
 ]);
 
-// 1. Create Arcjet middleware (Security layer runs first)
+// Create Arcjet middleware
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
+  // characteristics: ["userId"], // Track based on Clerk userId
   rules: [
+    // Shield protection for content and security
     shield({
       mode: "LIVE",
     }),
     detectBot({
-      mode: "LIVE", 
+      mode: "LIVE", // will block requests. Use "DRY_RUN" to log only
       allow: [
-        "CATEGORY:SEARCH_ENGINE", 
-        "GO_HTTP", 
+        "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc
+        "GO_HTTP", // For Inngest
+        // See the full list at https://arcjet.com/bot-list
       ],
     }),
   ],
 });
 
-// 2. Create Clerk middleware (Auth layer runs second)
+// Create base Clerk middleware
 const clerk = clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    const authObject = await auth();
-    
-    // If there is no user logged in, redirect them to sign-in securely
-    if (!authObject.userId) {
-      return authObject.redirectToSignIn();
-    }
+  const { userId } = await auth();
+
+  if (!userId && isProtectedRoute(req)) {
+    const { redirectToSignIn } = await auth();
+    return redirectToSignIn();
   }
-  
+
   return NextResponse.next();
 });
 
-// 3. Chain middlewares
-export default createMiddleware(aj, clerk);
+// Chain middlewares - ArcJet runs first, then Clerk
+export default createMiddleware(aj, { existingMiddleware: clerk });
 
 export const config = {
   matcher: [
